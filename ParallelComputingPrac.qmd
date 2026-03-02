@@ -16,8 +16,12 @@ calculate mean and variance
 row-bind your results (rbind) (results = mean and variance).
 
 ```{r}
+#| include: false
 library(foreach)
 
+```
+
+```{r}
 # define combine technique and add in "", rbind so each run is computed by row
 rand_sample <- foreach(i = 1:100, .combine = 'rbind') %do% {
   sample <- rexp(10, 1)
@@ -36,8 +40,12 @@ If the `foreach` function needs access to data or a function from a certain pack
 How does processing time compare to that of serial processing? If each iteration’s run time is small, relative to the amount of data that needs to be loaded and returned, parallel processing might not actually speed up the total run time. Bootstrapping is relatively small: draw a sample, calculate a statistic. It might only start making a difference if each chunk becomes large relatively to the overheads of data transfer. Experiment with this. Try doing 1000 bootstrap samples at a time instead of managing single bootstrap samples.
 
 ```{r}
+#| include: false
 library(doParallel)
 library(MASS)
+```
+
+```{r}
 head(galaxies)
 
 cl <- makeCluster(3)
@@ -69,8 +77,13 @@ Estimate coverage of a percentile bootstrap confidence interval for the followin
 Coverage is basically the number of confidence intervals that contain the true parameter value, here the true mean of the exponential is 1. Want to compute
 
 ```{r}
+#| include: false
 library(foreach)
 library(doParallel)
+```
+
+```{r}
+
 reps <- 1000 
 B <- 1000
 alpha <- 0.05
@@ -108,8 +121,12 @@ In this exercise, use the `foreach` and `irnorm` functions to iterate over 3 vec
 Before running the `foreach` function set the seed to 1234.
 
 ```{r}
-set.seed(1234)
+#| include: false
 library(iterators)
+```
+
+```{r}
+set.seed(1234)
 
 c3 <- makeCluster(3)
 registerDoParallel(c3)
@@ -128,7 +145,11 @@ print(largest)
 Compare run time between `parLapply`, `foreach` and `replicate` for the above problem.
 
 ```{r}
+#| include: false
 library(iterators)
+```
+
+```{r}
 
 c3 <- makeCluster(3)
 registerDoParallel(c3)
