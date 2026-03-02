@@ -59,8 +59,6 @@ b_medians <- foreach(i = 1:1000, .combine = "rbind") %dopar% {
  median <- c(median(b_sample))
 }
 })
-
-
 ```
 
 # Question 3
@@ -75,7 +73,10 @@ original_mean <- mean(original)
 cl2 <- makeCluster(2)
 registerDoParallel(cl2)
 
-b_means <- foreach(i = 1:1000, .combine = c) %dopar% {
+B <- 1000
+alpha <- 0.05
+
+b_means <- foreach(i = 1:B, .combine = c) %dopar% {
   b_samp <- sample(original, replace = T)
   b_means <- mean(b_samp)
 }
@@ -83,12 +84,23 @@ head(b_means)
 
 # estimate a confidence interval using these bootstrap samples
 
-#pos
+# Upper and lower bound positions for 95% confint
+pos_lower <- B*(alpha/2)
+pos_upper <- B*(1-(alpha)/2)
+
 #values
+sorted_b_means <- sort(b_means)
+val_lower <- sorted_b_means[pos_lower]
+val_upper <- sorted_b_means[pos_upper]
+
 #values - 2samp
+upper_bound <- -(val_lower -2*original_mean)
+lower_bound <- -(val_upper -2*original_mean)
 # confint
+confint <- c(lower_bound, upper_bound)
 
 # compute the number of bootstrap values contained in the confidence interval
+
 ```
 
 # Question 4
