@@ -1,0 +1,112 @@
+---
+title: "Parallel Computing"
+author: "Lihle Sigenu"
+format: pdf
+editor: visual
+---
+
+# Question 1
+
+Use a `foreach` loop to repeat 100 times:
+
+generate a random sample from an exponential distribution with mean 1
+
+calculate mean and variance
+
+row-bind your results (rbind) (results = mean and variance).
+
+```{r}
+library(foreach)
+
+# define combine technique and add in "", rbind so each run is computed by row
+rand_sample <- foreach(i = 1:100, .combine = 'rbind') %do% {
+  sample <- rexp(10, 1)
+  # bind the mean and var into one row
+  sample_stats <- c(mean(sample), var(sample))
+}
+head(rand_sample)
+```
+
+# Question 2
+
+Use the `doParallel` package and `foreach` to bootstrap the median for the galaxies data (in library MASS).
+
+If the `foreach` function needs access to data or a function from a certain package, this can be done by adding the `.packages='MASS'` (for example) argument.
+
+How does processing time compare to that of serial processing? If each iteration’s run time is small, relative to the amount of data that needs to be loaded and returned, parallel processing might not actually speed up the total run time. Bootstrapping is relatively small: draw a sample, calculate a statistic. It might only start making a difference if each chunk becomes large relatively to the overheads of data transfer. Experiment with this. Try doing 1000 bootstrap samples at a time instead of managing single bootstrap samples.
+
+```{r}
+library(doParallel)
+library(MASS)
+head(galaxies)
+
+cl <- makeCluster(3)
+registerDoParallel(cl)
+gals <- galaxies
+
+#Sequential time estimation
+system.time({
+b_medians <- foreach(i = 1:1000, .combine = "rbind") %do% {
+ b_sample <-  sample(gals, replace= T)
+ median <- c(median(b_sample))
+}
+})
+
+# Parallel time estimation
+system.time({
+b_medians <- foreach(i = 1:1000, .combine = "rbind") %dopar% {
+ b_sample <-  sample(gals, replace= T)
+ median <- c(median(b_sample))
+}
+})
+
+
+```
+
+# Question 3
+
+Estimate coverage of a percentile bootstrap confidence interval for the following scenario: sample of size 50 from an exponential distribution with mean 1.
+
+```{r}
+original <- rexp(50,1)
+original_mean <- mean(original)
+# Create bootstrap samples using foreach, dopar
+
+cl2 <- makeCluster(2)
+registerDoParallel(cl2)
+
+b_means <- foreach(i = 1:1000, .combine = c) %dopar% {
+  b_samp <- sample(original, replace = T)
+  b_means <- mean(b_samp)
+}
+head(b_means)
+
+# estimate a confidence interval using these bootstrap samples
+
+#pos
+#values
+#values - 2samp
+# confint
+
+# compute the number of bootstrap values contained in the confidence interval
+```
+
+# Question 4
+
+The package iterators provides several functions that can be used to create sequences for the `foreach` function. For example, the `irnorm` function creates an object that iterates over vectors of normally distributed random numbers. It is useful when you need to use random variables drawn from one distribution in an expression that is run in parallel.
+
+In this exercise, use the `foreach` and `irnorm` functions to iterate over 3 vectors, each containing 5 random variables. Find the largest value in each vector, and print those largest values.
+
+Before running the `foreach` function set the seed to 1234.
+
+```{r}
+
+```
+
+# Question 5
+
+Compare run time between `parLapply`, `foreach` and `replicate` for the above problem.
+
+```{r}
+
+```
