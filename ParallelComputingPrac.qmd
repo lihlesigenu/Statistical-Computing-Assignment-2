@@ -129,28 +129,51 @@ print(largest)
 Compare run time between `parLapply`, `foreach` and `replicate` for the above problem.
 
 ```{r}
-set.seed(1234)
 library(iterators)
 
 c3 <- makeCluster(3)
 registerDoParallel(c3)
 
-
+###########
 # parLapply
-?parLapply()
-norms <- irnorm(5, count = 3)
-parLapply(cl = c3, norms, max)
+###########
 
+set.seed(1234)
+
+# norms list stores the 3 vectors in a list, lapply does the function 3 times, function(i) is to repeat 1:3 times, rnorm generates 5 random numbers
+norms_list <- lapply(1:3, function(i) rnorm(5))
+# parLapply computes the max function to the list generated above, using the clients in cl
+parLapply_time <- system.time({
+  largest_parLapply <- parLapply(c3, norms_list, max)
+})
+cat("The parLapply time is: ", "\n")
+print(parLapply_time, "\n", " ", "\n")
+
+########
 #foreach
-cat("The foreach time is:", "\n")
-system.time({
-largest <- foreach(norms = irnorm(5, count = 3), .combine = c) %dopar% {
+########
+
+set.seed(1234)
+
+foreach_time <- system.time({
+largest_foreach <- foreach(norms = irnorm(5, count = 3), .combine = c) %dopar% {
   max(norms)
 }
 })
+cat("The foreach time is: ", "\n")
+print(foreach_time, "\n")
 
-
+##########
 #replicate
+##########
+
+set.seed(1234)
+
+replicate_time <- system.time({
+  largest_replicate <- replicate(3, max(rnorm(5)))
+})
+cat("The replicate time is: ", "\n")
+print(replicate_time, "\n")
 
 stopCluster(c3)
 ```
