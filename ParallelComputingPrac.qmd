@@ -108,7 +108,6 @@ In this exercise, use the `foreach` and `irnorm` functions to iterate over 3 vec
 Before running the `foreach` function set the seed to 1234.
 
 ```{r}
-?irnorm()
 set.seed(1234)
 library(iterators)
 
