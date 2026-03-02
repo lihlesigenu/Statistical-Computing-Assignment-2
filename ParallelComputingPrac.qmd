@@ -46,61 +46,57 @@ gals <- galaxies
 
 #Sequential time estimation
 system.time({
-b_medians <- foreach(i = 1:1000, .combine = "rbind") %do% {
- b_sample <-  sample(gals, replace= T)
+b_medians <- foreach(i = 1:1000, .combine = "rbind", .packages='MASS') %do% {
+ b_sample <-  sample(galaxies, replace= T)
  median <- c(median(b_sample))
 }
 })
 
 # Parallel time estimation
 system.time({
-b_medians <- foreach(i = 1:1000, .combine = "rbind") %dopar% {
- b_sample <-  sample(gals, replace= T)
+b_medians <- foreach(i = 1:1000, .combine = "rbind", .packages='MASS') %dopar% {
+ b_sample <-  sample(galaxies, replace= T)
  median <- c(median(b_sample))
 }
 })
+stopCluster(cl)
 ```
 
 # Question 3
 
 Estimate coverage of a percentile bootstrap confidence interval for the following scenario: sample of size 50 from an exponential distribution with mean 1.
 
+Coverage is basically the number of confidence intervals that contain the true parameter value, here the true mean of the exponential is 1. Want to compute
+
 ```{r}
-original <- rexp(50,1)
-original_mean <- mean(original)
-# Create bootstrap samples using foreach, dopar
-
-cl2 <- makeCluster(2)
-registerDoParallel(cl2)
-
+library(foreach)
+library(doParallel)
+reps <- 1000 
 B <- 1000
 alpha <- 0.05
+n <- 50
+mean <- 1
 
-b_means <- foreach(i = 1:B, .combine = c) %dopar% {
-  b_samp <- sample(original, replace = T)
-  b_means <- mean(b_samp)
+c1 <- makeCluster(2)
+registerDoParallel(c1)
+
+coverage <- foreach(i = 1:reps, .combine = c) %dopar% {
+  # obtain original sample from exponential dist
+  original <- rexp(50,1)
+  
+  # bootstrap means using replicate B times
+  b_means <- replicate(B, mean(sample(original, size = n, replace = T)))
+  
+  # confint
+  confint <- quantile(b_means, c(alpha/2, 1-alpha/2))
+  
+  # determine whether the confidence interval contains the true mean = 1
+  # if lower bound <= mean AND mean <= upper bound
+  as.numeric(confint[1] <= mean & mean <= confint[2])
 }
-head(b_means)
 
-# estimate a confidence interval using these bootstrap samples
-
-# Upper and lower bound positions for 95% confint
-pos_lower <- B*(alpha/2)
-pos_upper <- B*(1-(alpha)/2)
-
-#values
-sorted_b_means <- sort(b_means)
-val_lower <- sorted_b_means[pos_lower]
-val_upper <- sorted_b_means[pos_upper]
-
-#values - 2samp
-upper_bound <- -(val_lower -2*original_mean)
-lower_bound <- -(val_upper -2*original_mean)
-# confint
-confint <- c(lower_bound, upper_bound)
-
-# compute the number of bootstrap values contained in the confidence interval
-
+cat("The mean coverage is: ", mean(coverage))
+stopCluster(c1)
 ```
 
 # Question 4
@@ -112,6 +108,19 @@ In this exercise, use the `foreach` and `irnorm` functions to iterate over 3 vec
 Before running the `foreach` function set the seed to 1234.
 
 ```{r}
+?irnorm()
+set.seed(1234)
+library(iterators)
+
+c3 <- makeCluster(3)
+registerDoParallel(c3)
+
+
+largest <- foreach(norms = irnorm(5, count = 3), .combine = c) %dopar% {
+  max(norms)
+}
+
+print(largest)
 
 ```
 
@@ -120,5 +129,28 @@ Before running the `foreach` function set the seed to 1234.
 Compare run time between `parLapply`, `foreach` and `replicate` for the above problem.
 
 ```{r}
+set.seed(1234)
+library(iterators)
 
+c3 <- makeCluster(3)
+registerDoParallel(c3)
+
+
+# parLapply
+?parLapply()
+norms <- irnorm(5, count = 3)
+parLapply(cl = c3, norms, max)
+
+#foreach
+cat("The foreach time is:", "\n")
+system.time({
+largest <- foreach(norms = irnorm(5, count = 3), .combine = c) %dopar% {
+  max(norms)
+}
+})
+
+
+#replicate
+
+stopCluster(c3)
 ```
